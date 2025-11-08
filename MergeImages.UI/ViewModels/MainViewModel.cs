@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
@@ -21,6 +22,38 @@ namespace MergeImages.UI.ViewModels
         [ObservableProperty]
         private MergeOptionsViewModel _options = new(MergeDirection.Vertical, 0, BackgroundColorChoice.Transparent);
 
+        // Expose enum values for binding
+        public IReadOnlyList<MergeDirection> AvailableDirections { get; } = Enum.GetValues<MergeDirection>();
+
+        // Wrapper properties for immutable record fields to enable two-way binding
+        public MergeDirection Direction
+        {
+            get => Options.Direction;
+            set
+            {
+                if (Options.Direction != value)
+                {
+                    Options = Options with { Direction = value };
+                    OnPropertyChanged(nameof(Direction));
+                    OnPropertyChanged(nameof(Options));
+                }
+            }
+        }
+
+        public int Spacing
+        {
+            get => Options.Spacing;
+            set
+            {
+                if (Options.Spacing != value)
+                {
+                    Options = Options with { Spacing = value };
+                    OnPropertyChanged(nameof(Spacing));
+                    OnPropertyChanged(nameof(Options));
+                }
+            }
+        }
+
         public bool CanMerge => ImageCards.Count > 1;
 
         public MainViewModel(
@@ -35,7 +68,8 @@ namespace MergeImages.UI.ViewModels
             _coreBridge = coreBridge;
         }
 
-        public async Task SelectImagesAsync()
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    public async Task SelectImagesAsync()
         {
             var files = await _dialogService.ShowOpenFileDialogAsync(new Services.FileDialogOptions
             {
@@ -58,7 +92,8 @@ namespace MergeImages.UI.ViewModels
             OnPropertyChanged(nameof(CanMerge));
         }
 
-        public void RemoveImage(Guid id)
+    [CommunityToolkit.Mvvm.Input.RelayCommand]
+    public void RemoveImage(Guid id)
         {
             var item = ImageCards.FirstOrDefault(x => x.Id == id);
             if (item is not null)
@@ -77,8 +112,11 @@ namespace MergeImages.UI.ViewModels
         public void UpdateMergeOptions(MergeOptionsViewModel options)
         {
             Options = options;
+            OnPropertyChanged(nameof(Direction));
+            OnPropertyChanged(nameof(Spacing));
         }
 
+        [CommunityToolkit.Mvvm.Input.RelayCommand]
         public async Task MergeAsync()
         {
             if (!CanMerge) return;

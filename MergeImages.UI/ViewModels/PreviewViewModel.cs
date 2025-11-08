@@ -24,6 +24,9 @@ namespace MergeImages.UI.ViewModels
 
         public bool CanExport => MergedImageSource != null;
 
+    // Provide enum values for binding in XAML
+    public ExportFormat[] AvailableExportFormats { get; } = System.Enum.GetValues<ExportFormat>();
+
         public PreviewViewModel(
             Bitmap mergedImage,
             INavigationService navigationService,
@@ -36,21 +39,25 @@ namespace MergeImages.UI.ViewModels
             _coreBridge = coreBridge;
         }
 
+        [CommunityToolkit.Mvvm.Input.RelayCommand]
         public void GoBack()
         {
             _navigationService.NavigateToMain();
         }
 
+        [CommunityToolkit.Mvvm.Input.RelayCommand]
         public void UpdateFormat(ExportFormat format)
         {
             SelectedFormat = format;
         }
 
+        [CommunityToolkit.Mvvm.Input.RelayCommand]
         public void UpdateQuality(int quality)
         {
             Quality = quality;
         }
 
+        [CommunityToolkit.Mvvm.Input.RelayCommand]
         public async Task SaveAsAsync()
         {
             if (!CanExport) return;

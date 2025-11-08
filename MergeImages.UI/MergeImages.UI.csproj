@@ -26,4 +26,8 @@
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MergeImages.Core\MergeImages.Core.fsproj" />
+  </ItemGroup>
 </Project>

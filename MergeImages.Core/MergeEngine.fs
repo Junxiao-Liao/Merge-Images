@@ -8,6 +8,8 @@ open SixLabors.ImageSharp.Processing
 open Types
 
 module MergeEngine =
+    // Helper record for easier C# interop without needing to deconstruct DU cases
+    type MergeSuccess = { ImageData: byte array; Dimensions: ImageDimensions }
     let calculateMergedDimensions (images: (Guid * Image) list) (options: MergeOptions) : ImageDimensions =
         let count = images.Length
         if count = 0 then { Width = 0; Height = 0 }
@@ -60,3 +62,15 @@ module MergeEngine =
 
     let mergeImagesAsync (request: MergeRequest) : Async<MergeResult> =
         async { return mergeImages request }
+
+    // Flatten MergeResult to a simpler Result for C# consumption
+    let mergeImagesRaw (request: MergeRequest) : Result<MergeSuccess, string> =
+        match mergeImages request with
+        | MergeResult.Success (bytes, dims) -> Result.Ok { ImageData = bytes; Dimensions = dims }
+        | MergeResult.Error e -> Result.Error e
+
+    // Return only the merged image bytes or throw on error (for simplest C# interop)
+    let mergeImagesBytes (request: MergeRequest) : byte array =
+        match mergeImages request with
+        | MergeResult.Success (bytes, _) -> bytes
+        | MergeResult.Error e -> failwith e
