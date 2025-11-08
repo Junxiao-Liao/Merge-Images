@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36623.8 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MergeImages.Core", "MergeImages.Core\MergeImages.Core.fsproj", "{47AA6898-F3B6-4276-873A-7ECC8F1DB283}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MergeImages.UI", "MergeImages.UI\MergeImages.UI.csproj", "{27CA22E7-4275-417D-9789-CECC11FD27FD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{47AA6898-F3B6-4276-873A-7ECC8F1DB283} = {47AA6898-F3B6-4276-873A-7ECC8F1DB283}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{47AA6898-F3B6-4276-873A-7ECC8F1DB283}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47AA6898-F3B6-4276-873A-7ECC8F1DB283}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47AA6898-F3B6-4276-873A-7ECC8F1DB283}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47AA6898-F3B6-4276-873A-7ECC8F1DB283}.Release|Any CPU.Build.0 = Release|Any CPU
+		{27CA22E7-4275-417D-9789-CECC11FD27FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27CA22E7-4275-417D-9789-CECC11FD27FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{27CA22E7-4275-417D-9789-CECC11FD27FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{27CA22E7-4275-417D-9789-CECC11FD27FD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {34A165F5-FB2C-43CE-BE5D-6B6E3ECEDF7E}
+	EndGlobalSection
+EndGlobal
