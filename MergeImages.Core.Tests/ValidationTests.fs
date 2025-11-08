@@ -13,7 +13,6 @@ module ValidationTests =
             Images = []
             Options = {
                 Direction = MergeDirection.Vertical
-                Spacing = 0
                 Background = BackgroundFill.Transparent
             }
         }
@@ -21,15 +20,12 @@ module ValidationTests =
         | Ok _ -> Assert.Fail("Expected error for empty image list")
         | Result.Error errs -> Assert.True(errs |> List.contains ValidationError.EmptyImageList)
 
-    [<Theory>]
-    [<InlineData(0)>]
-    [<InlineData(5)>]
-    let ``validateMergeRequest passes for non-empty list and non-negative spacing`` spacing =
+    [<Fact>]
+    let ``validateMergeRequest passes for non-empty list`` () =
         let req = {
             Images = [ { Id = Guid.NewGuid(); FilePath = "a.png"; Order = 0 } ]
             Options = {
                 Direction = MergeDirection.Horizontal
-                Spacing = spacing
                 Background = BackgroundFill.Solid { R=255uy; G=255uy; B=255uy; A=255uy }
             }
         }

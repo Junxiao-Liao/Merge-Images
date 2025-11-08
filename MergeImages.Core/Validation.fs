@@ -26,8 +26,6 @@ module Validation =
         match req.Images with
         | [] -> errors.Add Types.ValidationError.EmptyImageList
         | _ -> ()
-        if req.Options.Spacing < 0 then
-            errors.Add (Types.ValidationError.UnsupportedFormat "Negative spacing not allowed")
         if errors.Count = 0 then Ok req else Result.Error (List.ofSeq errors)
 
     let validateExportRequest (req: Types.ExportRequest) : Result<Types.ExportRequest, Types.ValidationError> =

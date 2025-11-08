@@ -43,7 +43,7 @@ namespace MergeImages.UI.Services
                     _ => BgFill.Transparent
                 };
 
-                var mergeOptions = new CoreMergeOptions(direction, options.Spacing, bg);
+                var mergeOptions = new CoreMergeOptions(direction, bg);
 
                 var images = orderedImagePaths
                     .Select((p, idx) => new CoreImageSource(Guid.NewGuid(), p, idx));

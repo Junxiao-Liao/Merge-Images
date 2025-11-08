@@ -16,13 +16,31 @@ module MergeEngine =
         else
             match options.Direction with
             | MergeDirection.Vertical ->
-                let width = images |> List.maxBy (fun (_,i) -> i.Width) |> snd |> fun i -> i.Width
-                let height = (images |> List.sumBy (fun (_,i) -> i.Height)) + options.Spacing * (count - 1)
-                { Width = width; Height = height }
+                // All images will be scaled to match the maximum width
+                let maxWidth = images |> List.maxBy (fun (_,i) -> i.Width) |> snd |> fun i -> i.Width
+                // Calculate total height after scaling each image proportionally
+                let totalHeight = 
+                    images 
+                    |> List.sumBy (fun (_,img) ->
+                        if img.Width = maxWidth then img.Height
+                        else 
+                            let scale = float maxWidth / float img.Width
+                            int (float img.Height * scale)
+                    )
+                { Width = maxWidth; Height = totalHeight }
             | MergeDirection.Horizontal ->
-                let height = images |> List.maxBy (fun (_,i) -> i.Height) |> snd |> fun i -> i.Height
-                let width = (images |> List.sumBy (fun (_,i) -> i.Width)) + options.Spacing * (count - 1)
-                { Width = width; Height = height }
+                // All images will be scaled to match the maximum height
+                let maxHeight = images |> List.maxBy (fun (_,i) -> i.Height) |> snd |> fun i -> i.Height
+                // Calculate total width after scaling each image proportionally
+                let totalWidth = 
+                    images 
+                    |> List.sumBy (fun (_,img) ->
+                        if img.Height = maxHeight then img.Width
+                        else 
+                            let scale = float maxHeight / float img.Height
+                            int (float img.Width * scale)
+                    )
+                { Width = totalWidth; Height = maxHeight }
 
     let private colorToRgba32 (c: Color) = Rgba32(c.R, c.G, c.B, c.A)
 
@@ -41,20 +59,74 @@ module MergeEngine =
             | Result.Error e -> MergeResult.Error e
             | Ok loaded ->
                 try
-                    let dims = calculateMergedDimensions loaded req.Options
-                    use canvas = new Image<Rgba32>(dims.Width, dims.Height, backgroundColor req.Options.Background)
+                    let bg = backgroundColor req.Options.Background
+
+                    // Build normalized images: scale images to match largest dimension in merge direction
+                    let normalized : (Guid * Image<Rgba32>) list =
+                        match req.Options.Direction with
+                        | MergeDirection.Vertical ->
+                            // Scale all images to match the maximum width, preserving aspect ratio
+                            let maxWidth = loaded |> List.maxBy (fun (_,i) -> i.Width) |> snd |> fun i -> i.Width
+                            loaded
+                            |> List.map (fun (id, img) ->
+                                if img.Width = maxWidth then
+                                    (id, img.CloneAs<Rgba32>())
+                                else
+                                    // Calculate new height preserving aspect ratio
+                                    let scale = float maxWidth / float img.Width
+                                    let newHeight = int (float img.Height * scale)
+                                    let scaled = img.CloneAs<Rgba32>()
+                                    scaled.Mutate(fun ctx -> 
+                                        ctx.Resize(maxWidth, newHeight, KnownResamplers.Lanczos3) |> ignore)
+                                    (id, scaled)
+                            )
+                        | MergeDirection.Horizontal ->
+                            // Scale all images to match the maximum height, preserving aspect ratio
+                            let maxHeight = loaded |> List.maxBy (fun (_,i) -> i.Height) |> snd |> fun i -> i.Height
+                            loaded
+                            |> List.map (fun (id, img) ->
+                                if img.Height = maxHeight then
+                                    (id, img.CloneAs<Rgba32>())
+                                else
+                                    // Calculate new width preserving aspect ratio
+                                    let scale = float maxHeight / float img.Height
+                                    let newWidth = int (float img.Width * scale)
+                                    let scaled = img.CloneAs<Rgba32>()
+                                    scaled.Mutate(fun ctx -> 
+                                        ctx.Resize(newWidth, maxHeight, KnownResamplers.Lanczos3) |> ignore)
+                                    (id, scaled)
+                            )
+
+                    // Calculate final canvas size using normalized dimensions
+                    let dims =
+                        match req.Options.Direction with
+                        | MergeDirection.Vertical ->
+                            let width = normalized |> List.head |> snd |> fun i -> i.Width
+                            let height = normalized |> List.sumBy (fun (_,i) -> i.Height)
+                            { Width = width; Height = height }
+                        | MergeDirection.Horizontal ->
+                            let height = normalized |> List.head |> snd |> fun i -> i.Height
+                            let width = normalized |> List.sumBy (fun (_,i) -> i.Width)
+                            { Width = width; Height = height }
+
+                    use canvas = new Image<Rgba32>(dims.Width, dims.Height, bg)
                     let mutable x = 0
                     let mutable y = 0
-                    for (_, img) in loaded do
+                    for (_, img) in normalized do
                         canvas.Mutate(fun ctx -> ctx.DrawImage(img, Point(x,y), 1.0f) |> ignore)
                         match req.Options.Direction with
                         | MergeDirection.Vertical ->
-                            y <- y + img.Height + req.Options.Spacing
+                            y <- y + img.Height
                         | MergeDirection.Horizontal ->
-                            x <- x + img.Width + req.Options.Spacing
+                            x <- x + img.Width
+
                     use ms = new MemoryStream()
                     canvas.SaveAsPng(ms)
+
+                    // Dispose both original and normalized images
                     ImageLoader.disposeImages loaded
+                    normalized |> List.iter (fun (_,i) -> (i :> Image).Dispose())
+
                     MergeResult.Success(ms.ToArray(), dims)
                 with ex ->
                     ImageLoader.disposeImages loaded

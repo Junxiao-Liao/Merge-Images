@@ -30,7 +30,6 @@ namespace MergeImages.UI.Models
     // Represents all user-configurable merge settings
     public record MergeOptionsViewModel(
         MergeDirection Direction,
-        int Spacing,
         BackgroundColorChoice Background
     );
 

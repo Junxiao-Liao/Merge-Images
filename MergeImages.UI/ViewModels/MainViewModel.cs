@@ -20,7 +20,7 @@ namespace MergeImages.UI.ViewModels
         public ObservableCollection<ImageCardViewModel> ImageCards { get; } = new();
 
         [ObservableProperty]
-        private MergeOptionsViewModel _options = new(MergeDirection.Vertical, 0, BackgroundColorChoice.Transparent);
+        private MergeOptionsViewModel _options = new(MergeDirection.Vertical, BackgroundColorChoice.Transparent);
 
         // Expose enum values for binding
         public IReadOnlyList<MergeDirection> AvailableDirections { get; } = Enum.GetValues<MergeDirection>();
@@ -35,20 +35,6 @@ namespace MergeImages.UI.ViewModels
                 {
                     Options = Options with { Direction = value };
                     OnPropertyChanged(nameof(Direction));
-                    OnPropertyChanged(nameof(Options));
-                }
-            }
-        }
-
-        public int Spacing
-        {
-            get => Options.Spacing;
-            set
-            {
-                if (Options.Spacing != value)
-                {
-                    Options = Options with { Spacing = value };
-                    OnPropertyChanged(nameof(Spacing));
                     OnPropertyChanged(nameof(Options));
                 }
             }
@@ -92,6 +78,38 @@ namespace MergeImages.UI.ViewModels
             OnPropertyChanged(nameof(CanMerge));
         }
 
+        public async Task AddImagesAsync(string[] filePaths)
+        {
+            if (filePaths == null || filePaths.Length == 0) return;
+
+            var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff"
+            };
+
+            // Avoid duplicates by path
+            var existing = new HashSet<string>(ImageCards.Select(c => c.FilePath), StringComparer.OrdinalIgnoreCase);
+
+            var filtered = filePaths
+                .Where(p => !string.IsNullOrWhiteSpace(p))
+                .Where(p => allowed.Contains(System.IO.Path.GetExtension(p)))
+                .Where(p => !existing.Contains(p))
+                .ToArray();
+
+            if (filtered.Length == 0) return;
+
+            int baseOrder = ImageCards.Count;
+            int index = 0;
+            foreach (var file in filtered)
+            {
+                Bitmap? thumb = await _thumbnailService.GenerateThumbnailAsync(file, 200, 200);
+                ImageCards.Add(new ImageCardViewModel(Guid.NewGuid(), file, thumb, baseOrder + index));
+                index++;
+            }
+
+            OnPropertyChanged(nameof(CanMerge));
+        }
+
     [CommunityToolkit.Mvvm.Input.RelayCommand]
     public void RemoveImage(Guid id)
         {
@@ -109,11 +127,36 @@ namespace MergeImages.UI.ViewModels
             }
         }
 
+        [CommunityToolkit.Mvvm.Input.RelayCommand]
+        public void ClearAllImages()
+        {
+            ImageCards.Clear();
+            OnPropertyChanged(nameof(CanMerge));
+        }
+
         public void UpdateMergeOptions(MergeOptionsViewModel options)
         {
             Options = options;
             OnPropertyChanged(nameof(Direction));
-            OnPropertyChanged(nameof(Spacing));
+        }
+
+        public void ReorderImages(int oldIndex, int newIndex)
+        {
+            if (oldIndex < 0 || oldIndex >= ImageCards.Count ||
+                newIndex < 0 || newIndex >= ImageCards.Count ||
+                oldIndex == newIndex)
+                return;
+
+            var item = ImageCards[oldIndex];
+            ImageCards.RemoveAt(oldIndex);
+            ImageCards.Insert(newIndex, item);
+
+            // Reassign order to keep it sequential
+            for (int i = 0; i < ImageCards.Count; i++)
+            {
+                var ic = ImageCards[i];
+                ImageCards[i] = ic with { Order = i };
+            }
         }
 
         [CommunityToolkit.Mvvm.Input.RelayCommand]

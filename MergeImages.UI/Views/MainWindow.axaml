@@ -9,7 +9,10 @@
     x:Name="RootWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Merge Images">
+    Title="Merge Images"
+    DragDrop.AllowDrop="True"
+    DragDrop.DragOver="OnDragOver"
+    DragDrop.Drop="OnDrop">
 
     <Design.DataContext>
         <vm:MainViewModel />
@@ -26,32 +29,66 @@
             <ComboBox ItemsSource="{Binding AvailableDirections}"
                       SelectedItem="{Binding Direction}"
                       Width="120" />
-            <TextBlock Text="Spacing" VerticalAlignment="Center" />
-            <NumericUpDown Value="{Binding Spacing}"
-                           Width="70" Minimum="0" Maximum="200" />
             <Button Content="Merge" Command="{Binding MergeCommand}" IsEnabled="{Binding CanMerge}" />
         </StackPanel>
 
         <!-- Image list -->
-        <Border Grid.Row="1" Margin="12" BorderBrush="Gray" BorderThickness="1" CornerRadius="4" Padding="8">
-            <ScrollViewer>
-                <ItemsControl ItemsSource="{Binding ImageCards}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate x:DataType="models:ImageCardViewModel">
-                            <Border BorderBrush="#444" BorderThickness="1" Padding="6" Margin="4" CornerRadius="4">
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <Image Source="{Binding Thumbnail}" Width="60" Height="60"/>
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding FilePath}" TextWrapping="Wrap" Width="350" />
-                                        <TextBlock Text="Order: {Binding Order}" FontSize="11" />
-                                    </StackPanel>
-                                    <Button Content="Remove" Command="{Binding DataContext.RemoveImageCommand, ElementName=RootWindow}" CommandParameter="{Binding Id}" />
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+    <Border Grid.Row="1" Margin="12" BorderBrush="Gray" BorderThickness="1" CornerRadius="4" Padding="8"
+        DragDrop.AllowDrop="True" DragDrop.DragOver="OnDragOver" DragDrop.Drop="OnDrop">
+            <Grid RowDefinitions="Auto,*">
+                <!-- Header with Clear button -->
+                <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,8">
+                    <TextBlock Grid.Column="0" Text="Selected Images (Drag to reorder):" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <Button Grid.Column="1" Content="Clear" Command="{Binding ClearAllImagesCommand}" 
+                            IsEnabled="{Binding !!ImageCards.Count}" />
+                </Grid>
+
+                <!-- Image cards or hint text -->
+                <ScrollViewer Grid.Row="1">
+                    <Panel>
+                        <!-- Hint text when no images -->
+                        <TextBlock Text="Drag and drop images here to get started" 
+                                   FontSize="16" Foreground="Gray" 
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   IsVisible="{Binding !ImageCards.Count}" />
+                        
+                        <!-- Image cards -->
+                        <ItemsControl ItemsSource="{Binding ImageCards}" x:Name="ImageCardsControl">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:ImageCardViewModel">
+                                    <Border BorderBrush="#444" BorderThickness="1" Padding="6" Margin="4" CornerRadius="4"
+                                            x:Name="CardBorder"
+                                            DragDrop.AllowDrop="True"
+                                            PointerPressed="OnCardPointerPressed"
+                                            DragDrop.DragEnter="OnCardDragEnter"
+                                            DragDrop.DragLeave="OnCardDragLeave"
+                                            DragDrop.Drop="OnCardDrop">
+                                        <Grid ColumnDefinitions="Auto,Auto,*,Auto">
+                                            <!-- Drag handle -->
+                                            <Border Grid.Column="0" Width="20" VerticalAlignment="Stretch" 
+                                                    Background="Transparent" Cursor="Hand"
+                                                    ToolTip.Tip="Drag to reorder">
+                                                <TextBlock Text="⋮⋮" FontSize="16" 
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                           Foreground="Gray" />
+                                            </Border>
+                                            <Image Grid.Column="1" Source="{Binding Thumbnail}" Width="60" Height="60" Margin="4,0,8,0"/>
+                                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding FilePath}" TextWrapping="Wrap" MaxWidth="350" />
+                                                <TextBlock Text="{Binding Order, StringFormat='Order: {0}'}" FontSize="11" Foreground="Gray" />
+                                            </StackPanel>
+                                            <Button Grid.Column="3" Content="✕" Width="32" Height="32"
+                                                    Command="{Binding DataContext.RemoveImageCommand, ElementName=RootWindow}" 
+                                                    CommandParameter="{Binding Id}"
+                                                    ToolTip.Tip="Remove this image" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Panel>
+                </ScrollViewer>
+            </Grid>
         </Border>
 
         <!-- Status bar -->

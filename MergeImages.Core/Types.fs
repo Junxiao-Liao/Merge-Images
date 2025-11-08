@@ -27,7 +27,6 @@ module Types =
 
     type MergeOptions = {
         Direction: MergeDirection
-        Spacing: int
         Background: BackgroundFill
     }
 

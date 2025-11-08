@@ -85,5 +85,63 @@ namespace MergeImages.UI.Tests
 
             nav.Verify(n => n.NavigateToPreview(It.IsAny<Bitmap>()), Times.Once);
         }
+
+        [Fact]
+        public async Task ReorderImages_moves_card_to_new_position_and_updates_order()
+        {
+            // Arrange
+            var vm = CreateVm(out var dialog, out var thumbnails, out var nav, out var core);
+            var files = new[] { "a.png", "b.jpg", "c.webp", "d.bmp" };
+            dialog.Setup(d => d.ShowOpenFileDialogAsync(It.IsAny<FileDialogOptions>())).ReturnsAsync(files);
+            await vm.SelectImagesAsync();
+
+            // Verify initial order
+            Assert.Equal(files, vm.ImageCards.Select(c => c.FilePath).ToArray());
+            Assert.Equal(new[] { 0, 1, 2, 3 }, vm.ImageCards.Select(c => c.Order).ToArray());
+
+            // Act: Move first item (index 0) to third position (index 2)
+            vm.ReorderImages(0, 2);
+
+            // Assert: Order should now be [b, c, a, d]
+            var expectedOrder = new[] { "b.jpg", "c.webp", "a.png", "d.bmp" };
+            Assert.Equal(expectedOrder, vm.ImageCards.Select(c => c.FilePath).ToArray());
+            Assert.Equal(new[] { 0, 1, 2, 3 }, vm.ImageCards.Select(c => c.Order).ToArray());
+        }
+
+        [Fact]
+        public async Task ReorderImages_moves_card_backward_and_updates_order()
+        {
+            // Arrange
+            var vm = CreateVm(out var dialog, out var thumbnails, out var nav, out var core);
+            var files = new[] { "a.png", "b.jpg", "c.webp", "d.bmp" };
+            dialog.Setup(d => d.ShowOpenFileDialogAsync(It.IsAny<FileDialogOptions>())).ReturnsAsync(files);
+            await vm.SelectImagesAsync();
+
+            // Act: Move last item (index 3) to first position (index 0)
+            vm.ReorderImages(3, 0);
+
+            // Assert: Order should now be [d, a, b, c]
+            var expectedOrder = new[] { "d.bmp", "a.png", "b.jpg", "c.webp" };
+            Assert.Equal(expectedOrder, vm.ImageCards.Select(c => c.FilePath).ToArray());
+            Assert.Equal(new[] { 0, 1, 2, 3 }, vm.ImageCards.Select(c => c.Order).ToArray());
+        }
+
+        [Fact]
+        public async Task ReorderImages_ignores_invalid_indices()
+        {
+            // Arrange
+            var vm = CreateVm(out var dialog, out var thumbnails, out var nav, out var core);
+            var files = new[] { "a.png", "b.jpg" };
+            dialog.Setup(d => d.ShowOpenFileDialogAsync(It.IsAny<FileDialogOptions>())).ReturnsAsync(files);
+            await vm.SelectImagesAsync();
+
+            // Act: Try invalid reorders
+            vm.ReorderImages(-1, 0);
+            vm.ReorderImages(0, 5);
+            vm.ReorderImages(0, 0);
+
+            // Assert: Order should remain unchanged
+            Assert.Equal(files, vm.ImageCards.Select(c => c.FilePath).ToArray());
+        }
     }
 }
