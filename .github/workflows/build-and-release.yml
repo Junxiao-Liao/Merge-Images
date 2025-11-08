@@ -1,0 +1,175 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  PROJECT_PATH: 'MergeImages.UI/MergeImages.UI.csproj'
+  CONFIGURATION: 'Release'
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --configuration ${{ env.CONFIGURATION }} --no-restore
+
+      - name: Run Core tests
+        run: dotnet test MergeImages.Core.Tests/MergeImages.Core.Tests.fsproj --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+
+      - name: Run UI tests
+        run: dotnet test MergeImages.UI.Tests/MergeImages.UI.Tests.csproj --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+
+  build:
+    name: Build ${{ matrix.os }} ${{ matrix.arch }}
+    needs: test
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          # Windows builds
+          - os: windows
+            arch: x64
+            runner: windows-latest
+            rid: win-x64
+          - os: windows
+            arch: arm64
+            runner: windows-latest
+            rid: win-arm64
+          # Linux builds
+          - os: linux
+            arch: x64
+            runner: ubuntu-latest
+            rid: linux-x64
+          - os: linux
+            arch: arm64
+            runner: ubuntu-latest
+            rid: linux-arm64
+          # macOS builds
+          - os: macos
+            arch: x64
+            runner: macos-latest
+            rid: osx-x64
+          - os: macos
+            arch: arm64
+            runner: macos-latest
+            rid: osx-arm64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Publish application
+        run: |
+          dotnet publish ${{ env.PROJECT_PATH }} \
+            --configuration ${{ env.CONFIGURATION }} \
+            --runtime ${{ matrix.rid }} \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:PublishTrimmed=true \
+            -p:EnableCompressionInSingleFile=true \
+            -p:IncludeNativeLibrariesForSelfExtract=true \
+            --output ./publish/${{ matrix.rid }}
+
+      - name: Create archive (Windows)
+        if: matrix.os == 'windows'
+        shell: pwsh
+        run: |
+          $version = if ($env:GITHUB_REF -match 'refs/tags/v(.*)') { $matches[1] } else { "dev" }
+          Compress-Archive -Path ./publish/${{ matrix.rid }}/* -DestinationPath ./MergeImages-${{ matrix.os }}-${{ matrix.arch }}-${version}.zip
+
+      - name: Create archive (Unix)
+        if: matrix.os != 'windows'
+        run: |
+          if [[ "$GITHUB_REF" =~ refs/tags/v(.*) ]]; then
+            version="${BASH_REMATCH[1]}"
+          else
+            version="dev"
+          fi
+          cd ./publish/${{ matrix.rid }}
+          tar -czf ../../MergeImages-${{ matrix.os }}-${{ matrix.arch }}-${version}.tar.gz *
+
+      - name: Upload build artifacts (Windows)
+        if: matrix.os == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: MergeImages-${{ matrix.os }}-${{ matrix.arch }}
+          path: ./MergeImages-${{ matrix.os }}-${{ matrix.arch }}-*.zip
+
+      - name: Upload build artifacts (Unix)
+        if: matrix.os != 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: MergeImages-${{ matrix.os }}-${{ matrix.arch }}
+          path: ./MergeImages-${{ matrix.os }}-${{ matrix.arch }}-*.tar.gz
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -R ./artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p ./release
+          find ./artifacts -type f \( -name "*.zip" -o -name "*.tar.gz" \) -exec cp {} ./release/ \;
+          ls -lh ./release
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release v${{ steps.version.outputs.VERSION }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: ./release/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
