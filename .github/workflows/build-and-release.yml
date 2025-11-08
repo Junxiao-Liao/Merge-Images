@@ -90,7 +90,22 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Publish application
+      - name: Publish application (Windows)
+        if: matrix.os == 'windows'
+        shell: pwsh
+        run: |
+          dotnet publish ${{ env.PROJECT_PATH }} `
+            --configuration ${{ env.CONFIGURATION }} `
+            --runtime ${{ matrix.rid }} `
+            --self-contained true `
+            -p:PublishSingleFile=true `
+            -p:PublishTrimmed=true `
+            -p:EnableCompressionInSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            --output ./publish/${{ matrix.rid }}
+
+      - name: Publish application (Unix)
+        if: matrix.os != 'windows'
         run: |
           dotnet publish ${{ env.PROJECT_PATH }} \
             --configuration ${{ env.CONFIGURATION }} \
