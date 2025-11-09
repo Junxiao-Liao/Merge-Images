@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<linker>
+  <!-- Preserve Avalonia data validation plugins -->
+  <assembly fullname="Avalonia.Base">
+    <type fullname="Avalonia.Data.Core.Plugins.DataAnnotationsValidationPlugin" preserve="all" />
+    <type fullname="Avalonia.Data.Core.Plugins.BindingPlugins" preserve="all" />
+  </assembly>
+  
+  <!-- Preserve F# Core types that are used -->
+  <assembly fullname="FSharp.Core">
+    <type fullname="Microsoft.FSharp.Core.*" preserve="all" />
+  </assembly>
+</linker>
