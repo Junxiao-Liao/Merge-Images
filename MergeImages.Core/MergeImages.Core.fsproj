@@ -3,9 +3,10 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <!-- Make F# library trimming-friendly -->
+    <!-- Make F# library trimming-friendly and prevent embedding problematic resources -->
     <IsTrimmable>true</IsTrimmable>
-    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <EmbedFSharpCoreSignatureData>false</EmbedFSharpCoreSignatureData>
+    <EmbedFSharpCoreOptimizationData>false</EmbedFSharpCoreOptimizationData>
   </PropertyGroup>
 
   <ItemGroup>
