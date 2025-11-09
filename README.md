@@ -13,7 +13,7 @@ MergeImages is a cross-platform desktop app built with Avalonia UI. Combine imag
 3. **Set Options**: Pick vertical or horizontal layout, choose background color
 4. **Merge**: Click "Merge Images" to combine them
 5. **Preview**: Check the result in the preview window
-6. **Save**: Pick format and quality, then click "Save As" to export
+6. **Save**: Pick format, then click "Save As" to export
 
 ## Main Window
 
@@ -69,7 +69,6 @@ MergeImages is a cross-platform desktop app built with Avalonia UI. Combine imag
 |  +-----------------------------------------------------------+  |
 |  | Export Options:                                           |  |
 |  | Format:  [PNG [V]] [JPEG] [WEBP] [BMP] [TIFF]             |  |
-|  | Quality: [ 95 ] (for lossy formats)                       |  |
 |  +-----------------------------------------------------------+  |
 |                                                                 |
 |         [<-- Back]                       [Save As...]           |
@@ -94,7 +93,6 @@ MergeImages is a cross-platform desktop app built with Avalonia UI. Combine imag
 ### Export
 - Preview merged image before saving
 - Save as PNG, JPEG, WEBP, BMP, or TIFF
-- Adjust quality for JPEG and WEBP
 
 ## Project Structure
 
@@ -138,12 +136,14 @@ MergeImages/
 │
 ├── MergeImages.Core.Tests/                  # F# Unit Tests
 │   ├── MergeImages.Core.Tests.fsproj
+│   ├── Library.fs                           # Test helpers
 │   ├── ValidationTests.fs                   # Test validation logic
 │   ├── MergeEngineTests.fs                  # Test merge operations
 │   └── ImageExporterTests.fs                # Test export functions
 │
 └── MergeImages.UI.Tests/                    # C# Unit Tests
     ├── MergeImages.UI.Tests.csproj
+    ├── CoreBridgeTests.cs                   # Test F# interop
     ├── MainViewModelTests.cs                # Test main window logic
     └── PreviewViewModelTests.cs             # Test preview logic
 ```

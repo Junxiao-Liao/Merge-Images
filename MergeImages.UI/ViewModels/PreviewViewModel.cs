@@ -18,9 +18,6 @@ namespace MergeImages.UI.ViewModels
         [ObservableProperty]
         private ExportFormat _selectedFormat = ExportFormat.PNG;
 
-        // Quality applies only to lossy formats; 0-100 typical range
-        [ObservableProperty]
-        private int _quality = 95;
 
         public bool CanExport => MergedImageSource != null;
 
@@ -51,11 +48,6 @@ namespace MergeImages.UI.ViewModels
             SelectedFormat = format;
         }
 
-        [CommunityToolkit.Mvvm.Input.RelayCommand]
-        public void UpdateQuality(int quality)
-        {
-            Quality = quality;
-        }
 
         [CommunityToolkit.Mvvm.Input.RelayCommand]
         public async Task SaveAsAsync()
@@ -71,8 +63,7 @@ namespace MergeImages.UI.ViewModels
 
             if (string.IsNullOrWhiteSpace(path)) return;
 
-            int? quality = SelectedFormat is ExportFormat.JPEG or ExportFormat.WEBP ? Quality : null;
-            await _coreBridge.ExportAsync(MergedImageSource!, SelectedFormat, quality, path);
+            await _coreBridge.ExportAsync(MergedImageSource!, SelectedFormat, path);
         }
     }
 }

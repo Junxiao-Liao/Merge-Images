@@ -13,8 +13,7 @@
       <ComboBox ItemsSource="{Binding AvailableExportFormats}"
                 SelectedItem="{Binding SelectedFormat}"
                 Width="120" />
-      <NumericUpDown Value="{Binding Quality}" Width="80" Minimum="0" Maximum="100"/>
-  <Button Content="Save As" Command="{Binding SaveAsCommand}" IsEnabled="{Binding CanExport}" />
+      <Button Content="Save As" Command="{Binding SaveAsCommand}" IsEnabled="{Binding CanExport}" />
       <Button Content="Back" Command="{Binding GoBackCommand}" />
     </StackPanel>
   </Grid>

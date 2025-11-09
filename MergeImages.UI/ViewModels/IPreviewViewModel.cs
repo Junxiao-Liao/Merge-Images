@@ -7,7 +7,6 @@ namespace MergeImages.UI.ViewModels
     {
         void GoBack();
         void UpdateFormat(ExportFormat format);
-        void UpdateQuality(int quality);
         Task SaveAsAsync();
     }
 }

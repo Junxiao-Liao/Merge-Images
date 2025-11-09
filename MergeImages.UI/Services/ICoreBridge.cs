@@ -9,6 +9,6 @@ namespace MergeImages.UI.Services
     public interface ICoreBridge
     {
         Task<Bitmap> MergeAsync(IReadOnlyList<string> orderedImagePaths, MergeOptionsViewModel options);
-        Task<bool> ExportAsync(Bitmap image, ExportFormat format, int? quality, string outputPath);
+        Task<bool> ExportAsync(Bitmap image, ExportFormat format, string outputPath);
     }
 }

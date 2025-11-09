@@ -24,8 +24,3 @@ module ImageExporterTests =
             | Ok outBytes -> Assert.True(outBytes.Length > 0)
             | Result.Error e -> Assert.Fail($"Encoding failed for {f}: {e}")
 
-    [<Fact>]
-    let ``getDefaultQuality returns Some for lossy formats`` () =
-        Assert.Equal(Some 95, getDefaultQuality ImageFormat.JPEG)
-        Assert.Equal(Some 95, getDefaultQuality ImageFormat.WEBP)
-        Assert.Equal(None, getDefaultQuality ImageFormat.PNG)

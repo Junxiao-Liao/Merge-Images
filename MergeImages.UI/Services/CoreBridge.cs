@@ -61,7 +61,7 @@ namespace MergeImages.UI.Services
             });
         }
 
-        public Task<bool> ExportAsync(Bitmap image, ExportFormat format, int? quality, string outputPath)
+        public Task<bool> ExportAsync(Bitmap image, ExportFormat format, string outputPath)
         {
             // Placeholder: write PNG regardless
             try

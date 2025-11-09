@@ -45,31 +45,29 @@ namespace MergeImages.UI.Tests
         }
 
         [Fact]
-        public async Task SaveAsAsync_calls_export_with_quality_for_lossy_formats()
+        public async Task SaveAsAsync_calls_export_for_lossy_formats()
         {
             var vm = CreateVm(out var nav, out var dialog, out var core);
             vm.UpdateFormat(ExportFormat.JPEG);
-            vm.UpdateQuality(80);
             dialog.Setup(d => d.ShowSaveFileDialogAsync(It.IsAny<FileDialogOptions>())).ReturnsAsync("out.jpg");
-            core.Setup(c => c.ExportAsync(vm.MergedImageSource!, ExportFormat.JPEG, 80, "out.jpg")).ReturnsAsync(true);
+            core.Setup(c => c.ExportAsync(vm.MergedImageSource!, ExportFormat.JPEG, "out.jpg")).ReturnsAsync(true);
 
             await vm.SaveAsAsync();
 
-            core.Verify(c => c.ExportAsync(vm.MergedImageSource!, ExportFormat.JPEG, 80, "out.jpg"), Times.Once);
+            core.Verify(c => c.ExportAsync(vm.MergedImageSource!, ExportFormat.JPEG, "out.jpg"), Times.Once);
         }
 
         [Fact]
-        public async Task SaveAsAsync_skips_quality_for_lossless_format()
+        public async Task SaveAsAsync_exports_lossless_format()
         {
             var vm = CreateVm(out var nav, out var dialog, out var core);
             vm.UpdateFormat(ExportFormat.PNG); // lossless
-            vm.UpdateQuality(70); // should be ignored
             dialog.Setup(d => d.ShowSaveFileDialogAsync(It.IsAny<FileDialogOptions>())).ReturnsAsync("out.png");
-            core.Setup(c => c.ExportAsync(vm.MergedImageSource!, ExportFormat.PNG, null, "out.png")).ReturnsAsync(true);
+            core.Setup(c => c.ExportAsync(vm.MergedImageSource!, ExportFormat.PNG, "out.png")).ReturnsAsync(true);
 
             await vm.SaveAsAsync();
 
-            core.Verify(c => c.ExportAsync(vm.MergedImageSource!, ExportFormat.PNG, null, "out.png"), Times.Once);
+            core.Verify(c => c.ExportAsync(vm.MergedImageSource!, ExportFormat.PNG, "out.png"), Times.Once);
         }
 
         [Fact]

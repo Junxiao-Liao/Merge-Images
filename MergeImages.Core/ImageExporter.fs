@@ -42,8 +42,3 @@ module ImageExporter =
 
     let getSupportedFormats () = [ ImageFormat.PNG; ImageFormat.JPEG; ImageFormat.WEBP; ImageFormat.BMP; ImageFormat.TIFF ]
 
-    let getDefaultQuality (fmt: ImageFormat) : int option =
-        match fmt with
-        | ImageFormat.JPEG -> Some 95
-        | ImageFormat.WEBP -> Some 95
-        | _ -> None
