@@ -8,7 +8,7 @@
     x:Class="MergeImages.UI.Views.MainWindow"
     x:Name="RootWindow"
         x:DataType="vm:MainViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/icon.ico"
     Title="Merge Images"
     DragDrop.AllowDrop="True"
     DragDrop.DragOver="OnDragOver"
